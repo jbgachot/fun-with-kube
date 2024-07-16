@@ -1,0 +1,9 @@
+apiVersion: getambassador.io/v3alpha1
+kind: Mapping
+metadata:
+  name: argocd-server
+spec:
+  hostname: "*"
+  prefix: /argocd
+  rewrite: /argocd
+  service: argocd-server:443

@@ -37,9 +37,21 @@ _Create namespace and install the CRD for emissary_
 
 `kubectl apply -f .emissary/crds.yaml`
 
+> Here you should wait 1 or 2 minutes ⏳
+
 _Install the emissary helm chart_
 
 `helm install emissary-ingress -f .emissary/helm/values.yaml -n emissary .emissary/helm`
+
+_Generate a self-signed certificat and create the secrets_
+
+`openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -subj '/CN=ambassador-cert' -nodes`
+
+`kubectl create secret tls tls-cert --cert=cert.pem --key=key.pem`
+
+_Apply the Host configuration_
+
+`kubectl apply -f .emissary/wildcard-host.yaml`
 
 _Install the demo application_
 
@@ -47,6 +59,28 @@ _Install the demo application_
 
 _Test the configuration_
 
-`curl http://192.168.228.2/backend/ -i`
+> <WORKER_IP> being your kind-worker node ip
+
+`export WORKER_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' kind-worker)`
+
+`curl https://$WORKER_IP/demo/ -ik`
 
 > Emissary is using the "hostNetwork" in order to access our service. To avoid this setup, you will need a load balancer solution like [MetalLB](https://github.com/metallb/metallb)
+
+_Remove demo application_
+
+`kubectl delete -f ./demo.yaml`
+
+_Install [ArgoCD](https://argoproj.github.io/cd)_
+
+`kubectl create namespace argocd`
+
+`kubectl apply -n argocd -f .argocd/install.yaml`
+
+`kubectl apply -n argocd -f .argocd/ingress.yaml`
+
+_Retrive initial admin password_
+
+`kubectl -n argocd get secret argocd-initial-admin-secret --template={{.data.password}} | base64 -D; echo`
+
+> Browse the UI at [https://<WORKER_IP>/argocd](https://<WORKER_IP>/argocd) and connect with the admin user and the password you just retrieve
