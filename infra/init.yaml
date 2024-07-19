@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: demo
+  namespace: argocd
+spec:
+  destination:
+    namespace: demo
+    server: https://kubernetes.default.svc
+  project: demo
+  source:
+    path: infra
+    repoURL: https://github.com/jbgachot/fun-with-kube.git
+    targetRevision: HEAD
+    directory:
+      recurse: true

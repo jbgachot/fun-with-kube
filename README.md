@@ -31,17 +31,15 @@ _Install [Helm](https://helm.sh)_
 
 `go install helm.sh/helm/v3/cmd/helm@v3.15.1`
 
-_Create namespace and install the CRD for emissary_
+_Install the Emissary components and CRDs_
 
-`kubectl create namespace emissary`
-
-`kubectl apply -f .emissary/crds.yaml`
+`kubectl apply -f .emissary/crds.yaml` 
 
 > Here you should wait 1 or 2 minutes ⏳
 
 _Install the emissary helm chart_
 
-`helm install emissary-ingress -f .emissary/helm/values.yaml -n emissary .emissary/helm`
+`helm install emissary-ingress -f .emissary/helm/values.yaml -n emissary-system .emissary/helm`
 
 _Generate a self-signed certificat and create the secrets_
 
@@ -55,7 +53,7 @@ _Apply the Host configuration_
 
 _Install the demo application_
 
-`kubectl apply -f ./demo.yaml`
+`kubectl apply -f ./infra/demo.yaml`
 
 _Test the configuration_
 
@@ -69,7 +67,7 @@ _Test the configuration_
 
 _Remove demo application_
 
-`kubectl delete -f ./demo.yaml`
+`kubectl delete -f ./infra/demo.yaml`
 
 _Install [ArgoCD](https://argoproj.github.io/cd)_
 
@@ -79,8 +77,21 @@ _Install [ArgoCD](https://argoproj.github.io/cd)_
 
 `kubectl apply -n argocd -f .argocd/ingress.yaml`
 
-_Retrive initial admin password_
+_Retrieve initial admin password_
 
 `kubectl -n argocd get secret argocd-initial-admin-secret --template={{.data.password}} | base64 -D; echo`
 
-> Browse the UI at [https://<WORKER_IP>/argocd](https://<WORKER_IP>/argocd) and connect with the admin user and the password you just retrieve
+> Browse the UI at [https://<WORKER_IP>/argocd](https://<WORKER_IP>/argocd) and connect with the admin user and the password you just retrieved
+
+*optional*
+
+_Install new relic_
+
+`helm repo add newrelic https://helm-charts.newrelic.com`
+
+`helm repo update`
+
+`kubectl create namespace newrelic`
+
+`helm install newrelic-bundle -f .newrelic/helm/values.yaml -n newrelic .newrelic/helm --set global.licenseKey=xxx`
+
